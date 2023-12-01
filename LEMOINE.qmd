@@ -16,6 +16,7 @@ library(vroom)
 library(ggplot2)
 library(here)
 library(knitr)
+library(stringr)
 
 here::i_am("science_fiction.Rproj")
 ```
@@ -90,5 +91,56 @@ extreme_planets_table <- numerical_data %>%
 kable(extreme_planets_table, format = "markdown", digits = 2)
 
 
+
+```
+
+## Question 7
+
+```{r}
+
+# Extract terrain types
+terrain_df <- planets %>%
+  reframe("planet_identifier" = PLANET_NUMBER, "types" = str_split(`terrain type`, "\\|")) %>%
+  unnest(types) %>%
+  rename(`terrain type` = types)
+
+# Extract climate types
+climate_df <- planets %>%
+  reframe("planet_identifier" = PLANET_NUMBER, "types" = str_split(type_climate, "\\|")) %>%
+  unnest(types) %>%
+  rename(climate_type = types)
+
+# Print the first few rows of the extracted data frames
+knitr::kable(head(terrain_df))
+knitr::kable(head(climate_df))
+
+```
+
+## Question 8
+
+```{r}
+# Distribution of climates per planet
+climate_plot <- climate_df %>%
+  group_by(planet_identifier) %>%
+  summarise(num_climates = n()) %>%
+  ggplot(aes(x = num_climates)) +
+  geom_bar(stat = "count", fill = "darkblue") +
+  labs(title = "Distribution of Number of Climates per Planet",
+       x = "Number of Climates",
+       y = "Count")
+
+# Distribution of terrain types per planet
+terrain_plot <- terrain_df %>%
+  group_by(planet_identifier) %>%
+  summarise(num_terrain_types = n()) %>%
+  ggplot(aes(x = num_terrain_types)) +
+  geom_bar(stat = "count", fill = "darkblue") +
+  labs(title = "Distribution of Number of Terrain Types per Planet",
+       x = "Number of Terrain Types",
+       y = "Count")
+
+# Print the plots
+print(climate_plot)
+print(terrain_plot)
 
 ```
