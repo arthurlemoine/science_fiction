@@ -8,8 +8,10 @@ execute:
   warning: false
   error: false
 ---
+
 ```{r}
 library(dplyr)
+library(tidyr)
 library(vroom)
 library(ggplot2)
 library(here)
@@ -20,7 +22,7 @@ here::i_am("science_fiction.Rproj")
 
 ## Question 1
 
-I clearly uploaded everything before reading but no worries it's fixed. 
+I clearly uploaded everything before reading but no worries it's fixed.
 
 ## Question 2
 
@@ -29,9 +31,7 @@ Link to github: https://github.com/arthurlemoine/science_fiction.git
 ## Question 3
 
 ```{r}
-planets <- vroom(here("data", "PLANETS.csv"))
-planets$`Radius (Earth)` <- as.numeric(planets$`Radius (Earth)`)
-planets$mass <- as.numeric(planets$mass)
+planets <- vroom(here("data", "PLANETS.csv"), na = '_')
 
 head_df <- planets %>%
   head(n=10)
@@ -39,21 +39,56 @@ head_df <- planets %>%
 knitr::kable(head_df, digits = 0)
 ```
 
-This dataset is made of `r nrow(planets)` planets described by `r ncol(planets)` variables. 
-BONUS: a nice table of the 10 first rows. 
+This dataset is made of `r nrow(planets)` planets described by `r ncol(planets)` variables.
+
+BONUS: a nice table of the 10 first rows.
 
 ## Question 4
 
 ```{r}
-# Create a summary table
-summary_table <- data.frame(
-  Number_of_Observations = nrow(planets),
-  Number_of_Variables = ncol(planets),
-  Number_of_Missing_Values = sapply(planets, function(x) sum(x == "_")),
-  Observations_with_Missing_Values = sum(apply(planets, 1, function(x) any(x == "_")))
-)
+summary_table <- tibble(
+  Metric = c("Number of Observations", "Number of Variables", "Number of Missing Values", "Observations with Missing Values"),
+  Value = c(
+    nrow(planets),
+    ncol(planets),
+    sum((is.na(planets))),
+    sum(rowSums(is.na(planets)) > 0)
+  ))
 
-# Print the table
-knitr::kable(summary_table, format = "markdown")
+knitr::kable(summary_table)
 ```
 
+## Question 5
+
+```{r}
+filtered_data <- planets %>%
+  filter(!is.na(`Radius (Earth)`) & !is.na(`Density (Earth)`))
+
+ggplot(filtered_data, aes(x = `Density (Earth)`, y = `Radius (Earth)`)) +
+  geom_point() +
+  labs(title = "Radius of a Planet as a Function of Density",
+       x = "Density (Earth)",
+       y = "Radius (Earth)")
+```
+
+## Question 6
+
+```{r}
+
+# Filter out missing values in numerical variables
+numerical_data <- planets %>%
+  select_if(is.numeric)
+
+# Apply operations to find extreme planets for all numerical variables
+extreme_planets_table <- numerical_data %>%
+  gather(key = "Variable", value = "Value") %>%
+  group_by(Variable) %>%
+  slice(c(which.max(Value), which.min(Value))) %>%
+  mutate(Extreme = ifelse(row_number() == 1, "Maximum", "Minimum"))
+
+# Print the table
+kable(extreme_planets_table, format = "markdown", digits = 2)
+
+
+
+```
