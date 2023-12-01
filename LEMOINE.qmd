@@ -1,0 +1,59 @@
+---
+title: "Planets"
+author: "Arthur LEMOINE"
+format: html
+editor: visual
+execute: 
+  echo: false
+  warning: false
+  error: false
+---
+```{r}
+library(dplyr)
+library(vroom)
+library(ggplot2)
+library(here)
+library(knitr)
+
+here::i_am("science_fiction.Rproj")
+```
+
+## Question 1
+
+I clearly uploaded everything before reading but no worries it's fixed. 
+
+## Question 2
+
+Link to github: https://github.com/arthurlemoine/science_fiction.git
+
+## Question 3
+
+```{r}
+planets <- vroom(here("data", "PLANETS.csv"))
+planets$`Radius (Earth)` <- as.numeric(planets$`Radius (Earth)`)
+planets$mass <- as.numeric(planets$mass)
+
+head_df <- planets %>%
+  head(n=10)
+
+knitr::kable(head_df, digits = 0)
+```
+
+This dataset is made of `r nrow(planets)` planets described by `r ncol(planets)` variables. 
+BONUS: a nice table of the 10 first rows. 
+
+## Question 4
+
+```{r}
+# Create a summary table
+summary_table <- data.frame(
+  Number_of_Observations = nrow(planets),
+  Number_of_Variables = ncol(planets),
+  Number_of_Missing_Values = sapply(planets, function(x) sum(x == "_")),
+  Observations_with_Missing_Values = sum(apply(planets, 1, function(x) any(x == "_")))
+)
+
+# Print the table
+knitr::kable(summary_table, format = "markdown")
+```
+
