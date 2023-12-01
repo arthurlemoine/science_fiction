@@ -34,6 +34,17 @@ Link to github: https://github.com/arthurlemoine/science_fiction.git
 ```{r}
 planets <- vroom(here("data", "PLANETS.csv"), na = '_')
 
+num_planets <- nrow(planets)
+num_variables <- ncol(planets)
+numerical_variables <- sum(sapply(planets, is.numeric))
+
+# Print validation message
+if (num_planets == 860 && num_variables == 8 && numerical_variables == 5) {
+  cat("Data loaded successfully!")
+} else {
+  cat("Error: Invalid loading process.")
+}
+
 head_df <- planets %>%
   head(n=10)
 
@@ -142,5 +153,34 @@ terrain_plot <- terrain_df %>%
 # Print the plots
 print(climate_plot)
 print(terrain_plot)
+
+```
+
+## Question 9
+
+```{r}
+# Extract climate types and create a data frame
+climate_df <- planets %>%
+  reframe("planet_identifier" = PLANET_NUMBER, "types" = str_split(type_climate, "\\|")) %>%
+  unnest(types) %>%
+  rename(climate_type = types, PLANET_NUMBER = planet_identifier)
+
+# Merge with the main data frame based on PLANET_NUMBER
+merged_data <- left_join(planets, climate_df, by = "PLANET_NUMBER")
+
+# Create a data frame with separate rows for each combination of planet, climate, and mass
+mass_by_climate_df <- merged_data %>%
+  select(PLANET_NUMBER, mass, climate_type)
+
+# Plot the distribution of mass conditioned by climates
+mass_distribution_plot <- mass_by_climate_df %>%
+  ggplot(aes(x = climate_type, y = mass, fill=climate_type)) +
+  geom_boxplot()+
+  labs(title = "Distribution of Mass Conditioned by Climates",
+       x = "Climate Type",
+       y = "Mass")
+
+# Print the plot
+print(mass_distribution_plot)
 
 ```
